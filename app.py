@@ -305,7 +305,6 @@ def show_patent_detail(patent_data):
 # --- Lógica principal de la aplicación ---
 
 if st.session_state.current_view == 'search':
-    # No es necesario aplicar estilos a .stApp aquí, ya están en el CSS global.
     st.markdown("<h2 class='text-2xl font-bold mb-4'>Explorar soluciones técnicas</h2>", unsafe_allow_html=True)
 
     # Fixed number of results, no slider
