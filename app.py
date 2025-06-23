@@ -289,7 +289,7 @@ if 'selected_patent' not in st.session_state:
 if 'search_results' not in st.session_state: # Para almacenar los resultados después de una búsqueda
     st.session_state.search_results = []
 if 'query_description' not in st.session_state: # Para persistir la consulta de búsqueda
-    st.session_state.query_description = "Necesito soluciones para la gestión eficiente de la producción de miel."
+    st.session_state.query_description = "Certificación calidad de miel."
 
 
 # --- Funciones para la gestión de vistas ---
