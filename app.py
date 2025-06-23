@@ -62,7 +62,7 @@ st.markdown(
             display: none !important;
         }
 
-        /* --- Google Patents style for patent results --- */
+        /* --- Google Patents style for patent results (Search View) --- */
         .google-patent-result-container { /* New container for each result block */
             background-color: #ffffff; /* White background */
             border: 1px solid #dadce0; /* Light gray border */
@@ -125,13 +125,16 @@ st.markdown(
             border-radius: 0.4rem;
         }
 
-        /* Styles for the full patent view */
+        /* --- Styles for the full patent view (Detail View) --- */
         .full-patent-view-container {
+            /* Estos estilos hacen que ocupe el área principal sin bordes de tarjeta */
             background-color: #ffffff;
-            border-radius: 1.5rem;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-            padding: 2.5rem;
-            margin-top: 2rem;
+            border-radius: 1.5rem; /* Mantiene los bordes redondeados del contenedor principal de la app */
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1); /* Mantiene la sombra de la app */
+            padding: 2.5rem; /* Mantiene el padding del contenedor principal de la app */
+            margin-top: 2rem; /* Espacio superior, ya presente */
+            /* IMPORTANTE: Remueve bordes específicos de tarjeta para esta vista */
+            border: none; /* Sin borde */
         }
         .full-patent-title {
             font-size: 1.8rem;
@@ -400,12 +403,14 @@ if st.session_state.current_view == 'search':
 elif st.session_state.current_view == 'detail':
     selected_patent = st.session_state.selected_patent
     if selected_patent:
+        # Aquí eliminamos los bordes específicos de tarjeta aplicando solo la clase full-patent-view-container
+        # que hemos modificado para no tener bordes ni sombras adicionales a las del stApp.
         st.markdown(f"<div class='full-patent-view-container'>", unsafe_allow_html=True)
         st.markdown(f"<h1 class='full-patent-title'>{html.escape(selected_patent['title'])}</h1>", unsafe_allow_html=True)
         
         # Muestra la imagen si está disponible, eliminando el parámetro deprecated
         if selected_patent['image_url']:
-            st.image(selected_patent['image_url'], width=200, output_format="PNG") # <-- CAMBIO AQUÍ
+            st.image(selected_patent['image_url'], width=200, output_format="PNG") 
         
         st.markdown(f"<p class='full-patent-abstract'>{html.escape(selected_patent['abstract'])}</p>", unsafe_allow_html=True)
         st.markdown(f"<p class='full-patent-meta'>Número de Publicación: {selected_patent['publication_number']}</p>", unsafe_allow_html=True)
