@@ -175,9 +175,9 @@ st.markdown(
 @st.cache_resource
 def load_embedding_model():
     """
-    Loads the pre-trained SentenceTransformer model.
-    `st.cache_resource` is used to load the model only once and reuse it,
-    improving application performance.
+    Carga el modelo pre-entrenado SentenceTransformer.
+    `st.cache_resource` se usa para cargar el modelo una sola vez y reutilizarlo,
+    mejorando el rendimiento de la aplicación.
     """
     with st.spinner("Cargando el modelo de embeddings (esto puede tardar un momento)..."):
         model = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
@@ -186,14 +186,15 @@ def load_embedding_model():
 @st.cache_data
 def process_patent_data(file_path):
     """
-    Processes the patent file from a local path (CSV or Excel).
-    Reads the file, combines title and summary, gets image URLs (from GitHub), and generates the embeddings.
-    `st.cache_data` is used to cache processed data
-    and generated embeddings, avoiding unnecessary reprocessing.
+    Procesa el archivo de patentes desde una ruta local (CSV o Excel).
+    Lee el archivo, combina título y resumen, obtiene las URLs de las imágenes (desde GitHub)
+    y genera los embeddings.
+    `st.cache_data` se usa para almacenar en caché los datos procesados
+    y los embeddings generados, evitando reprocesamientos innecesarios.
     """
     if file_path:
         try:
-            # Determine file type and read accordingly
+            # Determina el tipo de archivo y lo lee en consecuencia
             if file_path.endswith('.csv'):
                 df = pd.read_csv(file_path)
             elif file_path.endswith('.xlsx'):
@@ -202,49 +203,49 @@ def process_patent_data(file_path):
                 st.error("Formato de archivo no soportado. Por favor, sube un archivo .csv o .xlsx.")
                 return None, None
 
-            # Normalize column names: strip spaces and convert to lowercase
+            # Normaliza los nombres de las columnas: elimina espacios y convierte a minúsculas
             df.columns = df.columns.str.strip().str.lower()
 
-            # Define required columns after normalization
+            # Define las columnas requeridas después de la normalización
             required_columns_normalized = [
                 'title (original language)',
                 'abstract (original language)',
                 'publication number',
             ]
             
-            # Check if all required columns exist after normalization
+            # Verifica si todas las columnas requeridas existen después de la normalización
             for col in required_columns_normalized:
                 if col not in df.columns:
                     st.error(f"El archivo Excel debe contener la columna requerida: '{col}'. "
                              "Por favor, revisa que los nombres de las columnas sean exactos (ignorando mayúsculas/minúsculas y espacios extra).")
                     return None, None
 
-            # Access columns using their normalized names
+            # Accede a las columnas usando sus nombres normalizados
             original_title_col = 'title (original language)'
             original_abstract_col = 'abstract (original language)'
             publication_number_col = 'publication number'
 
-            # Fill null values with empty strings
+            # Rellena los valores nulos con cadenas vacías
             df[original_title_col] = df[original_title_col].fillna('')
             df[original_abstract_col] = df[original_abstract_col].fillna('')
             df[publication_number_col] = df[publication_number_col].fillna('')
 
-            # --- Configure GitHub Image Base URL ---
+            # --- Configuración de la URL base de la imagen de GitHub ---
             github_image_base_url = "https://raw.githubusercontent.com/aleivahernandez/ITP/main/images/" 
-            # --- End GitHub Image Base URL Configuration ---
+            # --- Fin de la configuración de la URL base de la imagen de GitHub ---
 
-            # Construct image URLs using Publication Number
+            # Construye las URLs de las imágenes usando el número de publicación
             df['image_url_processed'] = df[publication_number_col].apply(
                 lambda x: f"{github_image_base_url}{x}.png" if x else ""
             )
 
-            # Combines the original title and summary to create a complete patent description
+            # Combina el título y el resumen originales para crear una descripción completa de la patente
             df['Descripción Completa'] = df[original_title_col] + ". " + df[original_abstract_col]
 
-            # Load the embedding model INSIDE this cached function
+            # Carga la instancia del modelo de embedding dentro de esta función cacheadas
             model_instance = load_embedding_model()
 
-            # Generates embeddings for all patent descriptions using the loaded model instance
+            # Genera los embeddings para todas las descripciones de patentes usando la instancia del modelo cargado
             corpus_embeddings = model_instance.encode(df['Descripción Completa'].tolist(), convert_to_tensor=True)
             return df, corpus_embeddings
         except FileNotFoundError:
@@ -255,16 +256,16 @@ def process_patent_data(file_path):
             return None, None
     return None, None
 
-# --- Automatic local Excel file loading section ---
+# --- Sección de carga automática de archivos Excel locales ---
 
-# The name of the local patent file in the same repository
+# El nombre del archivo de patentes local en el mismo repositorio
 excel_file_name = "patentes.xlsx" 
 
-# Initialize df_patents and patent_embeddings
+# Inicializa df_patents y patent_embeddings
 df_patents = None
 patent_embeddings = None
 
-# Processes the data automatically upon application startup
+# Procesa los datos automáticamente al inicio de la aplicación
 with st.spinner(f"Inicializando base de datos de patentes..."):
     df_patents, patent_embeddings = process_patent_data(excel_file_name)
 
@@ -272,60 +273,60 @@ if df_patents is None or patent_embeddings is None:
     st.error(f"No se pudo cargar o procesar la base de datos de patentes desde '{excel_file_name}'. "
              "Por favor, verifica que el archivo exista en el mismo directorio de 'app.py' en tu repositorio de GitHub "
              "y que contenga las columnas requeridas (ver mensaje de error anterior).")
-    st.stop() # Stop the app if data can't be loaded
+    st.stop() # Detiene la aplicación si los datos no se pueden cargar
 
-# --- Session State Initialization ---
+# --- Inicialización del Estado de Sesión ---
 if 'current_view' not in st.session_state:
-    st.session_state.current_view = 'search' # 'search' or 'detail'
+    st.session_state.current_view = 'search' # 'search' o 'detail'
 if 'selected_patent' not in st.session_state:
     st.session_state.selected_patent = None
-if 'search_results' not in st.session_state: # To store results after a search
+if 'search_results' not in st.session_state: # Para almacenar los resultados después de una búsqueda
     st.session_state.search_results = []
-if 'query_description' not in st.session_state: # To persist search query
+if 'query_description' not in st.session_state: # Para persistir la consulta de búsqueda
     st.session_state.query_description = "Necesito soluciones para la gestión eficiente de la producción de miel."
 
 
-# --- Functions for view management ---
+# --- Funciones para la gestión de vistas ---
 def show_search_view():
     st.session_state.current_view = 'search'
     st.session_state.selected_patent = None
-    st.session_state.search_results = [] # Clear previous results when returning to search
+    st.session_state.search_results = [] # Limpia los resultados anteriores al volver a la búsqueda
 
 def show_patent_detail(patent_data):
     st.session_state.current_view = 'detail'
     st.session_state.selected_patent = patent_data
 
-# --- Main Application Logic ---
+# --- Lógica principal de la aplicación ---
 
 if st.session_state.current_view == 'search':
     st.markdown("<h2 class='text-2xl font-bold mb-4'>Explorar soluciones técnicas</h2>", unsafe_allow_html=True)
 
-    # Fixed number of results, no slider
+    # Número fijo de resultados, sin slider
     MAX_RESULTS = 3
 
-    # Use a form to capture the text input and button press together for better UX
+    # Usa un formulario para capturar la entrada de texto y la pulsación del botón juntos para una mejor UX
     with st.form(key='search_form', clear_on_submit=False):
-        # This is the Streamlit text_area, now visible and primary for input
+        # Este es el text_area de Streamlit, ahora visible y principal para la entrada
         problem_description = st.text_area(
             "Describe tu problema técnico o necesidad funcional:",
-            value=st.session_state.query_description, # Use persisted query
-            height=68, # Required minimum height
-            label_visibility="visible", # Keep label visible
+            value=st.session_state.query_description, # Usa la consulta persistida
+            height=68, # Altura mínima requerida
+            label_visibility="visible", # Mantiene la etiqueta visible
             key="problem_description_input_area",
             placeholder="Escribe aquí tu necesidad apícola..."
         )
         
-        # This is the Streamlit form submit button.
+        # Este es el botón de envío del formulario de Streamlit.
         submitted = st.form_submit_button("Buscar Soluciones", type="primary")
 
-        # If the form is submitted, perform the search and store results in session_state
+        # Si el formulario se envía, realiza la búsqueda y almacena los resultados en session_state
         if submitted:
-            current_problem_description = problem_description.strip() # Direct access to text_area value
-            st.session_state.query_description = current_problem_description # Persist the query
+            current_problem_description = problem_description.strip() # Acceso directo al valor del text_area
+            st.session_state.query_description = current_problem_description # Persiste la consulta
 
             if not current_problem_description:
                 st.warning("Por favor, ingresa una descripción del problema.")
-                st.session_state.search_results = [] # Clear results if query is empty
+                st.session_state.search_results = [] # Limpia los resultados si la consulta está vacía
             else:
                 with st.spinner("Buscando patentes relevantes..."):
                     try: 
@@ -335,7 +336,7 @@ if st.session_state.current_view == 'search':
                         cosine_scores = util.cos_sim(query_embedding, patent_embeddings)[0]
                         top_results_indices = np.argsort(-cosine_scores.cpu().numpy())[:MAX_RESULTS]
 
-                        # Store the search results in session_state
+                        # Almacena los resultados de la búsqueda en session_state
                         results_to_display = []
                         for i, idx in enumerate(top_results_indices):
                             score = cosine_scores[idx].item()
@@ -355,9 +356,9 @@ if st.session_state.current_view == 'search':
                         
                     except Exception as e: 
                         st.error(f"Ocurrió un error durante la búsqueda: {e}")
-                        st.session_state.search_results = [] # Clear results on error
+                        st.session_state.search_results = [] # Limpia los resultados en caso de error
 
-    # Display search results OUTSIDE the form
+    # Muestra los resultados de la búsqueda FUERA del formulario
     if st.session_state.search_results:
         st.subheader("Resultados de la búsqueda:") 
         for i, patent_data in enumerate(st.session_state.search_results):
@@ -382,17 +383,17 @@ if st.session_state.current_view == 'search':
     </div>
 </div>
 """, unsafe_allow_html=True)
-                # Now, the "Ver Detalles Completos" button is OUTSIDE the form
+                # Ahora, el botón "Ver Detalles Completos" está FUERA del formulario
                 st.button(
                     "Ver Detalles Completos", 
-                    key=f"view_patent_{i}", # Unique key for each button
+                    key=f"view_patent_{i}", # Clave única para cada botón
                     on_click=show_patent_detail, 
-                    args=(patent_data,), # Pass the full patent_data to the callback
+                    args=(patent_data,), # Pasa los datos completos de la patente al callback
                     use_container_width=True
                 )
-                st.markdown("---") # Separator between results
+                st.markdown("---") # Separador entre resultados
     elif st.session_state.query_description and submitted and not st.session_state.search_results:
-        # Only show this message if a search was actually submitted and yielded no results
+        # Solo muestra este mensaje si una búsqueda fue enviada y no arrojó resultados
         st.info("No se encontraron patentes relevantes con la descripción proporcionada.")
 
 
@@ -402,16 +403,16 @@ elif st.session_state.current_view == 'detail':
         st.markdown(f"<div class='full-patent-view-container'>", unsafe_allow_html=True)
         st.markdown(f"<h1 class='full-patent-title'>{html.escape(selected_patent['title'])}</h1>", unsafe_allow_html=True)
         
-        # Display image if available
+        # Muestra la imagen si está disponible, eliminando el parámetro deprecated
         if selected_patent['image_url']:
-            st.image(selected_patent['image_url'], use_column_width=False, width=200, output_format="PNG")
+            st.image(selected_patent['image_url'], width=200, output_format="PNG") # <-- CAMBIO AQUÍ
         
         st.markdown(f"<p class='full-patent-abstract'>{html.escape(selected_patent['abstract'])}</p>", unsafe_allow_html=True)
         st.markdown(f"<p class='full-patent-meta'>Número de Publicación: {selected_patent['publication_number']}</p>", unsafe_allow_html=True)
-        st.markdown(f"</div>", unsafe_allow_html=True) # Close full-patent-view-container
+        st.markdown(f"</div>", unsafe_allow_html=True) # Cierra full-patent-view-container
         
-        # Back button
+        # Botón para volver
         st.button("Volver a la Búsqueda", on_click=show_search_view, key="back_to_search_btn", help="Regresar a la página de resultados de búsqueda.", type="secondary", use_container_width=True)
     else:
         st.warning("No se ha seleccionado ninguna patente para ver los detalles.")
-        show_search_view() # Redirect to search if no patent is selected
+        show_search_view() # Redirige a la búsqueda si no se selecciona ninguna patente
