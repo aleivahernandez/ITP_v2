@@ -128,14 +128,18 @@ st.markdown(
         /* --- Styles for the full patent view (Detail View) --- */
         .full-patent-view-container {
             /* Estos estilos hacen que ocupe el área principal sin bordes de tarjeta */
-            background-color: #ffffff;
-            border-radius: 1.5rem; /* Mantiene los bordes redondeados del contenedor principal de la app */
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1); /* Mantiene la sombra de la app */
-            padding: 2.5rem; /* Mantiene el padding del contenedor principal de la app */
-            margin-top: 2rem; /* Espacio superior, ya presente */
-            /* IMPORTANTE: Remueve bordes específicos de tarjeta para esta vista */
-            border: none; /* Sin borde */
+            background-color: transparent !important; /* Hacer el fondo transparente */
+            border-radius: 0 !important; /* Sin bordes redondeados */
+            box-shadow: none !important; /* Sin sombra */
+            padding: 0 !important; /* Eliminar el padding para que el contenido ocupe todo el espacio */
+            margin-top: 0 !important; /* Eliminar margen superior si no es necesario */
+            border: none !important; /* Sin borde */
         }
+        /* Ajustar el padding del .stApp directamente para el contenido de detalle */
+        .stApp.detail-view {
+             padding: 2.5rem; /* Aplicar el padding al contenedor principal de la app cuando estemos en detalle */
+        }
+
         .full-patent-title {
             font-size: 1.8rem;
             font-weight: 700;
@@ -302,9 +306,22 @@ def show_patent_detail(patent_data):
 # --- Lógica principal de la aplicación ---
 
 if st.session_state.current_view == 'search':
+    # Si estamos en la vista de búsqueda, nos aseguramos de que el contenedor principal de la app tenga padding y un fondo blanco.
+    st.markdown(
+        """
+        <style>
+        .stApp {
+            background-color: #ffffff; /* Fondo blanco para el contenedor principal en vista de búsqueda */
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            padding: 2.5rem;
+        }
+        </style>
+        """, unsafe_allow_html=True
+    )
     st.markdown("<h2 class='text-2xl font-bold mb-4'>Explorar soluciones técnicas</h2>", unsafe_allow_html=True)
 
-    # Número fijo de resultados, sin slider
+    # Fixed number of results, no slider
     MAX_RESULTS = 3
 
     # Usa un formulario para capturar la entrada de texto y la pulsación del botón juntos para una mejor UX
@@ -401,20 +418,33 @@ if st.session_state.current_view == 'search':
 
 
 elif st.session_state.current_view == 'detail':
+    # Si estamos en la vista de detalle, modificamos el stApp para que se vea "limpio"
+    st.markdown(
+        """
+        <style>
+        .stApp {
+            background-color: transparent !important; /* Fondo transparente para el contenedor principal de la app */
+            border-radius: 0 !important; /* Sin bordes redondeados */
+            box-shadow: none !important; /* Sin sombra */
+            padding: 0 !important; /* Eliminar el padding para que ocupe toda la pantalla */
+            max-width: 100% !important; /* Asegurar que ocupe todo el ancho disponible */
+        }
+        </style>
+        """, unsafe_allow_html=True
+    )
+
     selected_patent = st.session_state.selected_patent
     if selected_patent:
-        # Aquí eliminamos los bordes específicos de tarjeta aplicando solo la clase full-patent-view-container
-        # que hemos modificado para no tener bordes ni sombras adicionales a las del stApp.
-        st.markdown(f"<div class='full-patent-view-container'>", unsafe_allow_html=True)
+        # Ya no usamos .full-patent-view-container si queremos eliminar todas las cajas.
+        # Simplemente mostramos el contenido directamente.
         st.markdown(f"<h1 class='full-patent-title'>{html.escape(selected_patent['title'])}</h1>", unsafe_allow_html=True)
         
-        # Muestra la imagen si está disponible, eliminando el parámetro deprecated
+        # Muestra la imagen si está disponible
         if selected_patent['image_url']:
             st.image(selected_patent['image_url'], width=200, output_format="PNG") 
         
         st.markdown(f"<p class='full-patent-abstract'>{html.escape(selected_patent['abstract'])}</p>", unsafe_allow_html=True)
         st.markdown(f"<p class='full-patent-meta'>Número de Publicación: {selected_patent['publication_number']}</p>", unsafe_allow_html=True)
-        st.markdown(f"</div>", unsafe_allow_html=True) # Cierra full-patent-view-container
         
         # Botón para volver
         st.button("Volver a la Búsqueda", on_click=show_search_view, key="back_to_search_btn", help="Regresar a la página de resultados de búsqueda.", type="secondary", use_container_width=True)
