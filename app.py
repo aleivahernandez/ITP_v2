@@ -6,9 +6,9 @@ import io
 import html
 
 # --- Configuración de la aplicación Streamlit ---
-st.set_page_config(layout="wide", page_title="Explorador de Soluciones Técnicas (Patentes)")
+st.set_page_config(layout="wide", page_title="Brújula Tecnológica Territorial")
 
-# Custom CSS for a better visual match to Google Patents style
+# Custom CSS
 st.markdown(
     """
     <script src="https://cdn.tailwindcss.com"></script>
@@ -16,90 +16,76 @@ st.markdown(
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #e0f2f7; /* Light blue background for the page */
+            background-color: #e0f2f7;
         }
-        /* El contenedor principal de la aplicación Streamlit.
-           Estos estilos se aplicarán consistentemente a toda la app,
-           incluyendo las vistas de búsqueda y detalle. */
         .stApp {
-            max-width: 800px; /* Constrain the app width */
-            margin: 2rem auto; /* Center the app on the page */
-            background-color: #ffffff; /* White background for the app container */
-            border-radius: 1.5rem; /* Rounded Corners */
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1); /* Soft shadow */
-            padding: 2.5rem; /* Padding inside the app container */
+            max-width: 800px;
+            margin: 2rem auto;
+            background-color: #ffffff;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            padding: 2.5rem;
         }
-        /* Style for the main search input container */
         div[data-testid="stForm"] div[data-testid^="stBlock"] > div > div[data-testid="stTextArea"] {
-            border-radius: 9999px !important; /* Fully rounded */
-            border: 1px solid #d1d5db !important; /* Light gray border */
-            padding: 0.5rem 1.5rem !important; /* Adjust padding */
+            border-radius: 9999px !important;
+            border: 1px solid #d1d5db !important;
+            padding: 0.5rem 1.5rem !important;
             box-shadow: 0 4px 6px rgba(0,0,0,0.05) !important;
-            font-size: 1.125rem !important; /* text-lg */
-            margin-bottom: 1rem; /* Space below the input */
-            resize: none !important; /* Prevent manual resizing */
+            font-size: 1.125rem !important;
+            margin-bottom: 1rem;
+            resize: none !important;
         }
-        /* Style for the submit button */
         button[data-testid="stFormSubmitButton"] {
             background-color: #20c997 !important;
             color: white !important;
-            border-radius: 0.75rem !important; /* Rounded corners */
+            border-radius: 0.75rem !important;
             padding: 0.75rem 1.5rem !important;
             font-weight: 600 !important;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
             transition: background-color 0.2s ease !important;
-            display: block !important; /* Make it a block element */
-            margin: 0 auto 2rem auto !important; /* Center the button and add margin below */
-            width: fit-content; /* Adjust width to content */
+            display: block !important;
+            margin: 0 auto 2rem auto !important;
+            width: fit-content;
         }
         button[data-testid="stFormSubmitButton"]:hover {
             background-color: #1aae89 !important;
         }
-        /* Adjust default paragraph font size for st.markdown */
-        .st-emotion-cache-16idsys p, 
-        .st-emotion-cache-1s2a8v p { 
-            font-size: 1rem;
-        }
-        /* Hide the default label for st.text_area */
         div[data-testid="stForm"] div[data-testid^="stBlock"] > div > label[data-testid="stWidgetLabel"] {
             display: none !important;
         }
-
-        /* --- Google Patents style for patent results (Search View) --- */
-        .google-patent-result-container { /* New container for each result block (individual search results) */
-            background-color: #ffffff; /* White background */
-            border: 1px solid #dadce0; /* Light gray border */
-            border-radius: 8px; /* Slightly rounded corners */
+        .google-patent-result-container {
+            background-color: #ffffff;
+            border: 1px solid #dadce0;
+            border-radius: 8px;
             padding: 1.25rem;
             margin-bottom: 1rem;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); /* Subtle shadow */
-            position: relative; /* For similarity score */
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
         .result-header {
             display: flex;
-            align-items: flex-start; /* Align image and text to the top */
+            align-items: flex-start;
             margin-bottom: 0.5rem;
-            gap: 1rem; /* Space between image and text */
+            gap: 1rem;
         }
-        .result-image-wrapper { /* Wrapper for the image to control its size and flex behavior */
+        .result-image-wrapper {
             flex-shrink: 0;
-            width: 80px; /* Fixed width for the image container */
-            height: 80px; /* Fixed height for the image container */
+            width: 80px;
+            height: 80px;
             border-radius: 4px;
             overflow: hidden;
             display: flex;
             justify-content: center;
             align-items: center;
-            background-color: #f0f0f0; /* Placeholder background */
+            background-color: #f0f0f0;
         }
         .result-image {
             width: 100%;
             height: 100%;
-            object-fit: contain; /* Ensure image fits without cropping, maintaining aspect ratio */
+            object-fit: contain;
             border-radius: 4px;
         }
-        .result-text-content { /* Wrapper for title, summary, meta */
-            flex-grow: 1; /* Allows text content to take remaining space */
+        .result-text-content {
+            flex-grow: 1;
         }
         .result-title {
             font-size: 1.15rem;
@@ -118,58 +104,57 @@ st.markdown(
             font-size: 0.8rem;
             color: #70757a;
         }
-        .similarity-score-display { /* For displaying score without absolute positioning */
+        .similarity-score-display {
             font-size: 0.8rem;
             font-weight: 600;
-            color: #20c997; /* Teal color */
-            margin-left: auto; /* Push to the right */
-            background-color: #e0f2f7; /* Light blue background to contrast */
+            color: #20c997;
+            margin-left: auto;
+            background-color: #e0f2f7;
             padding: 0.15rem 0.4rem;
             border-radius: 0.4rem;
         }
-
-        /* --- Styles for the full patent view (Detail View) --- */
-        /* Eliminamos .full-patent-view-container porque el contenido de detalle
-           ahora se mostrará directamente dentro de .stApp.
-           Si necesitas un padding adicional interno para los detalles, puedes agregarlo a un div con esta clase. */
-        .detail-content-wrapper {
-            /* Esto es un envoltorio para dar un padding adicional al contenido de la patente dentro de .stApp */
-            padding-top: 0.5rem; /* Ajusta según necesites más espacio en la parte superior */
-            padding-bottom: 0.5rem; /* Ajusta según necesites más espacio en la parte inferior */
-            /* No queremos bordes, sombras o fondos aquí, porque ya los maneja .stApp */
+        
+        /* --- ESTILOS PARA VISTA DE DETALLE --- */
+        .bordered-box {
+            background-color: #ffffff; /* Fondo blanco */
+            border: 2px solid #e0f2f7; /* Borde con el color de la app */
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            height: 100%;
         }
-
+        .bordered-box img {
+            width: 100%;
+            border-radius: 0.5rem;
+        }
+        .title-container-bordered {
+             background-color: #ffffff;
+             border: 2px solid #e0f2f7;
+             padding: 1.5rem;
+             border-radius: 0.75rem;
+             margin-bottom: 1.5rem;
+        }
         .full-patent-title {
             font-size: 1.8rem;
             font-weight: 700;
             color: #1a0dab;
-            margin-bottom: 1rem;
+            margin: 0;
+        }
+        .detail-subtitle {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.75rem;
         }
         .full-patent-abstract {
             font-size: 1.1rem;
             line-height: 1.6;
             color: #333333;
-            margin-bottom: 1.5rem;
+            text-align: justify;
         }
         .full-patent-meta {
             font-size: 0.9rem;
             color: #70757a;
             margin-top: 1rem;
-        }
-        .back-button {
-            background-color: #6c757d !important; /* Grey color for back button */
-            color: white !important;
-            border-radius: 0.75rem !important;
-            padding: 0.75rem 1.5rem !important;
-            font-weight: 600 !important;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
-            transition: background-color 0.2s ease !important;
-            display: block !important;
-            margin: 2rem auto 0 auto !important;
-            width: fit-content;
-        }
-        .back-button:hover {
-            background-color: #5a6268 !important;
         }
     </style>
     """,
@@ -180,83 +165,44 @@ st.markdown(
 
 @st.cache_resource
 def load_embedding_model():
-    """
-    Carga el modelo pre-entrenado SentenceTransformer.
-    `st.cache_resource` se usa para cargar el modelo una sola vez y reutilizarlo,
-    mejorando el rendimiento de la aplicación.
-    """
-    with st.spinner("Cargando el modelo de embeddings (esto puede tardar un momento)..."):
+    """Carga el modelo pre-entrenado SentenceTransformer."""
+    with st.spinner("Cargando el modelo de embeddings..."):
         model = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
     return model
 
 @st.cache_data
 def process_patent_data(file_path):
-    """
-    Procesa el archivo de patentes desde una ruta local (CSV o Excel).
-    Lee el archivo, combina título y resumen, obtiene las URLs de las imágenes (desde GitHub)
-    y genera los embeddings.
-    `st.cache_data` se usa para almacenar en caché los datos procesados
-    y los embeddings generados, evitando reprocesamientos innecesarios.
-    """
+    """Procesa el archivo de patentes y genera los embeddings."""
     if file_path:
         try:
-            # Determina el tipo de archivo y lo lee en consecuencia
             if file_path.endswith('.csv'):
                 df = pd.read_csv(file_path)
-            elif file_path.endswith('.xlsx'):
+            elif file_path.endswith(('.xlsx', '.xls')):
                 df = pd.read_excel(file_path)
             else:
-                st.error("Formato de archivo no soportado. Por favor, sube un archivo .csv o .xlsx.")
+                st.error("Formato de archivo no soportado. Sube un .csv o .xlsx.")
                 return None, None
 
-            # Normaliza los nombres de las columnas: elimina espacios y convierte a minúsculas
             df.columns = df.columns.str.strip().str.lower()
+            required_cols = ['title (original language)', 'abstract (original language)', 'publication number']
+            if not all(col in df.columns for col in required_cols):
+                st.error(f"El archivo debe contener las columnas: {', '.join(required_cols)}")
+                return None, None
 
-            # Define las columnas requeridas después de la normalización
-            required_columns_normalized = [
-                'title (original language)',
-                'abstract (original language)',
-                'publication number',
-            ]
-            
-            # Verifica si todas las columnas requeridas existen después de la normalización
-            for col in required_columns_normalized:
-                if col not in df.columns:
-                    st.error(f"El archivo Excel debe contener la columna requerida: '{col}'. "
-                             "Por favor, revisa que los nombres de las columnas sean exactos (ignorando mayúsculas/minúsculas y espacios extra).")
-                    return None, None
+            for col in required_cols:
+                df[col] = df[col].fillna('')
 
-            # Accede a las columnas usando sus nombres normalizados
-            original_title_col = 'title (original language)'
-            original_abstract_col = 'abstract (original language)'
-            publication_number_col = 'publication number'
-
-            # Rellena los valores nulos con cadenas vacías
-            df[original_title_col] = df[original_title_col].fillna('')
-            df[original_abstract_col] = df[original_abstract_col].fillna('')
-            df[publication_number_col] = df[publication_number_col].fillna('')
-
-            # --- Configure GitHub Image Base URL ---
-            # CAMBIO AQUÍ: Nueva URL del repositorio v2
-            github_image_base_url = "https://raw.githubusercontent.com/aleivahernandez/ITP_v2/main/images/" 
-            # --- End GitHub Image Base URL Configuration ---
-
-            # Construct image URLs using Publication Number
-            df['image_url_processed'] = df[publication_number_col].apply(
+            github_image_base_url = "https://raw.githubusercontent.com/aleivahernandez/ITP_v2/main/images/"
+            df['image_url_processed'] = df['publication number'].apply(
                 lambda x: f"{github_image_base_url}{x}.png" if x else ""
             )
 
-            # Combines the original title and summary to create a complete patent description
-            df['Descripción Completa'] = df[original_title_col] + ". " + df[original_abstract_col]
-
-            # Load the embedding model INSIDE this cached function
-            model_instance = load_embedding_model()
-
-            # Generates embeddings for all patent descriptions using the loaded model instance
-            corpus_embeddings = model_instance.encode(df['Descripción Completa'].tolist(), convert_to_tensor=True)
+            df['Descripción Completa'] = df['title (original language)'] + ". " + df['abstract (original language)']
+            model = load_embedding_model()
+            corpus_embeddings = model.encode(df['Descripción Completa'].tolist(), convert_to_tensor=True)
             return df, corpus_embeddings
         except FileNotFoundError:
-            st.error(f"Error: El archivo '{file_path}' no se encontró. Asegúrate de que está en la misma carpeta que 'app.py' en tu repositorio de GitHub.")
+            st.error(f"Error: No se encontró el archivo '{file_path}'.")
             return None, None
         except Exception as e:
             st.error(f"Error al procesar el archivo '{file_path}': {e}")
@@ -264,167 +210,136 @@ def process_patent_data(file_path):
     return None, None
 
 # --- Automatic local Excel file loading section ---
+excel_file_name = "patentes.xlsx"
+df_patents, patent_embeddings = process_patent_data(excel_file_name)
 
-# The name of the local patent file in the same repository
-excel_file_name = "patentes.xlsx" 
-
-# Initialize df_patents and patent_embeddings
-df_patents = None
-patent_embeddings = None
-
-# Processes the data automatically upon application startup
-with st.spinner(f"Inicializando base de datos de patentes..."):
-    df_patents, patent_embeddings = process_patent_data(excel_file_name)
-
-if df_patents is None or patent_embeddings is None:
-    st.error(f"No se pudo cargar o procesar la base de datos de patentes desde '{excel_file_name}'. "
-             "Por favor, verifica que el archivo exista en el mismo directorio de 'app.py' en tu repositorio de GitHub "
-             "y que contenga las columnas requeridas (ver mensaje de error anterior).")
-    st.stop() # Stop the app if data can't be loaded
+if df_patents is None:
+    st.error("La aplicación no puede continuar sin la base de datos de patentes.")
+    st.stop()
 
 # --- Session State Initialization ---
 if 'current_view' not in st.session_state:
-    st.session_state.current_view = 'search' # 'search' or 'detail'
+    st.session_state.current_view = 'search'
 if 'selected_patent' not in st.session_state:
     st.session_state.selected_patent = None
-if 'search_results' not in st.session_state: # To store results after a search
+if 'search_results' not in st.session_state:
     st.session_state.search_results = []
-if 'query_description' not in st.session_state: # To persist search query
+if 'query_description' not in st.session_state:
     st.session_state.query_description = "Certificación calidad de miel."
-
 
 # --- Functions for view management ---
 def show_search_view():
     st.session_state.current_view = 'search'
     st.session_state.selected_patent = None
-    st.session_state.search_results = [] # Clear previous results when returning to search
 
 def show_patent_detail(patent_data):
     st.session_state.current_view = 'detail'
     st.session_state.selected_patent = patent_data
 
 # --- Main Application Logic ---
-
 if st.session_state.current_view == 'search':
-    st.markdown("<h2 class='text-2xl font-bold mb-4'>Explorar soluciones técnicas</h2>", unsafe_allow_html=True)
+    st.markdown("<h1 style='font-size: 1.75rem; font-weight: 700; margin-bottom: 1rem;'>Brújula Tecnológica Territorial</h1>", unsafe_allow_html=True)
 
-    # Fixed number of results, no slider
-    MAX_RESULTS = 3
-
-    # Use a form to capture the text input and button press together for better UX
-    with st.form(key='search_form', clear_on_submit=False):
-        # This is the Streamlit text_area, now visible and primary for input
+    with st.form(key='search_form'):
         problem_description = st.text_area(
             "Describe tu problema técnico o necesidad funcional:",
-            value=st.session_state.query_description, # Use persisted query
-            height=68, # Required minimum height
-            label_visibility="visible", # Keep label visible
+            value=st.session_state.query_description,
+            height=68,
             key="problem_description_input_area",
             placeholder="Escribe aquí tu necesidad apícola..."
         )
-        
-        # This is the Streamlit form submit button.
-        submitted = st.form_submit_button("Buscar Soluciones", type="primary")
+        submitted = st.form_submit_button("Buscar Soluciones")
 
-        # If the form is submitted, perform the search and store results in session_state
         if submitted:
-            current_problem_description = problem_description.strip() # Direct access to text_area value
-            st.session_state.query_description = current_problem_description # Persist the query
-
-            if not current_problem_description:
+            st.session_state.query_description = problem_description.strip()
+            if not st.session_state.query_description:
                 st.warning("Por favor, ingresa una descripción del problema.")
-                st.session_state.search_results = [] # Clear results if query is empty
+                st.session_state.search_results = []
             else:
                 with st.spinner("Buscando patentes relevantes..."):
-                    try: 
-                        current_model = load_embedding_model()
-                        query_embedding = current_model.encode(current_problem_description, convert_to_tensor=True)
+                    model = load_embedding_model()
+                    query_embedding = model.encode(st.session_state.query_description, convert_to_tensor=True)
+                    cosine_scores = util.cos_sim(query_embedding, patent_embeddings)[0]
+                    top_indices = np.argsort(-cosine_scores.cpu().numpy())[:3]
 
-                        cosine_scores = util.cos_sim(query_embedding, patent_embeddings)[0]
-                        top_results_indices = np.argsort(-cosine_scores.cpu().numpy())[:MAX_RESULTS]
+                    results = []
+                    for idx in top_indices:
+                        patent_data = df_patents.iloc[idx]
+                        results.append({
+                            'title': patent_data['title (original language)'],
+                            'abstract': patent_data['abstract (original language)'],
+                            'publication_number': patent_data['publication number'],
+                            'image_url': patent_data['image_url_processed'],
+                            'score': cosine_scores[idx].item()
+                        })
+                    st.session_state.search_results = results
 
-                        # Store the search results in session_state
-                        results_to_display = []
-                        for i, idx in enumerate(top_results_indices):
-                            score = cosine_scores[idx].item()
-                            patent_title = df_patents.iloc[idx]['title (original language)']
-                            patent_summary = df_patents.iloc[idx]['abstract (original language)']
-                            patent_image_url = df_patents.iloc[idx]['image_url_processed'] 
-                            patent_number_found = df_patents.iloc[idx]['publication number']
-                            
-                            results_to_display.append({
-                                'title': patent_title,
-                                'abstract': patent_summary,
-                                'publication_number': patent_number_found,
-                                'image_url': patent_image_url,
-                                'score': score
-                            })
-                        st.session_state.search_results = results_to_display
-                        
-                    except Exception as e: 
-                        st.error(f"Ocurrió un error durante la búsqueda: {e}")
-                        st.session_state.search_results = [] # Clear results on error
-
-    # Display search results OUTSIDE the form
     if st.session_state.search_results:
-        st.subheader("Resultados de la búsqueda:") 
-        for i, patent_data in enumerate(st.session_state.search_results):
-            escaped_patent_title = html.escape(patent_data['title'])
-            escaped_patent_summary_short = html.escape(patent_data['abstract'][:100]) + "..."
-            default_image_url = "https://placehold.co/120x120/cccccc/000000?text=No+Image" 
-            
-            with st.container(border=False):
-                st.markdown(f"""
-<div class="google-patent-result-container">
-    <div class="result-header">
-        <div class="result-image-wrapper">
-            <img src="{patent_data['image_url'] if patent_data['image_url'] else default_image_url}" 
-                 alt="" class="result-image" 
-                 onerror="this.onerror=null;this.src='{default_image_url}';">
-        </div>
-        <div class="result-text-content">
-            <h3 class="result-title">{escaped_patent_title}</h3>
-            <p class="result-summary">{escaped_patent_summary_short}</p>
-            <p class="result-meta">Patente: {patent_data['publication_number']} <span class="similarity-score-display">Similitud: {patent_data['score']:.2%}</span></p>
-        </div>
-    </div>
-</div>
-""", unsafe_allow_html=True)
-                # Add a button to view full details
-                st.button(
-                    "Ver Detalles Completos", 
-                    key=f"view_patent_{i}", # Unique key for each button
-                    on_click=show_patent_detail, 
-                    args=(patent_data,), # Pass the full patent_data to the callback
-                    use_container_width=True
-                )
-                st.markdown("---") # Separator between results
-    elif st.session_state.query_description and submitted and not st.session_state.search_results:
-        # Only show this message if a search was actually submitted and yielded no results
+        st.markdown("---")
+        st.subheader("Resultados de la Búsqueda:")
+        for i, patent in enumerate(st.session_state.search_results):
+            escaped_title = html.escape(patent['title'])
+            escaped_summary = html.escape(patent['abstract'][:120]) + "..."
+            default_image = "https://placehold.co/120x120/cccccc/000000?text=No+Image"
+
+            st.markdown(f"""
+            <div class="google-patent-result-container">
+                <div class="result-header">
+                    <div class="result-image-wrapper">
+                        <img src="{patent['image_url'] or default_image}" class="result-image" onerror="this.onerror=null;this.src='{default_image}';">
+                    </div>
+                    <div class="result-text-content">
+                        <h3 class="result-title">{escaped_title}</h3>
+                        <p class="result-summary">{escaped_summary}</p>
+                        <p class="result-meta">Patente: {patent['publication_number']} <span class="similarity-score-display">Similitud: {patent['score']:.2%}</span></p>
+                    </div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+            st.button("Ver Detalles Completos", key=f"view_{i}", on_click=show_patent_detail, args=(patent,), use_container_width=True)
+            st.markdown("<br>", unsafe_allow_html=True)
+
+    elif submitted and not st.session_state.search_results:
         st.info("No se encontraron patentes relevantes con la descripción proporcionada.")
 
-
 elif st.session_state.current_view == 'detail':
-    # The .stApp container already has the main border and shadow you want.
-    # We simply render the content directly within it.
+    patent = st.session_state.selected_patent
+    if patent:
+        # 1. Título de ancho completo con borde
+        st.markdown(f"""
+        <div class="title-container-bordered">
+            <h1 class='full-patent-title'>{html.escape(patent['title'])}</h1>
+        </div>
+        """, unsafe_allow_html=True)
 
-    selected_patent = st.session_state.selected_patent
-    if selected_patent:
-        # We use a div with a class to give internal padding to the patent information,
-        # without adding any extra border, shadow, or background, as the .stApp already handles those.
-        st.markdown(f"<div class='detail-content-wrapper'>", unsafe_allow_html=True)
-        st.markdown(f"<h1 class='full-patent-title'>{html.escape(selected_patent['title'])}</h1>", unsafe_allow_html=True)
-        
-        # Display image if available
-        if selected_patent['image_url']:
-            st.image(selected_patent['image_url'], width=200, output_format="PNG") 
-        
-        st.markdown(f"<p class='full-patent-abstract'>{html.escape(selected_patent['abstract'])}</p>", unsafe_allow_html=True)
-        st.markdown(f"<p class='full-patent-meta'>Número de Publicación: {selected_patent['publication_number']}</p>", unsafe_allow_html=True)
-        st.markdown(f"</div>", unsafe_allow_html=True) # Close detail-content-wrapper
-        
-        # Back button
-        st.button("Volver a la Búsqueda", on_click=show_search_view, key="back_to_search_btn", help="Regresar a la página de resultados de búsqueda.", type="secondary", use_container_width=True)
+        # 2. Crear dos columnas para la imagen y el resumen
+        col1, col2 = st.columns([0.5, 0.5], gap="small")
+
+        with col1:
+            # Se crea el HTML para la imagen y su caja, y se renderiza con st.markdown
+            default_image = "https://placehold.co/400x400/cccccc/000000?text=No+Disponible"
+            image_html = f"""
+            <div class='bordered-box'>
+                <h2 class='detail-subtitle'>Imagen</h2>
+                <img src="{patent.get('image_url') or default_image}" alt="Imagen de la patente">
+            </div>
+            """
+            st.markdown(image_html, unsafe_allow_html=True)
+
+        with col2:
+            # Se crea el HTML para el resumen y su caja
+            summary_html = f"""
+            <div class='bordered-box'>
+                <h2 class='detail-subtitle'>Resumen</h2>
+                <p class='full-patent-abstract'>{html.escape(patent['abstract'])}</p>
+            </div>
+            """
+            st.markdown(summary_html, unsafe_allow_html=True)
+
+        # 3. Metadatos y botón de volver
+        st.markdown(f"<p class='full-patent-meta'>Número de Publicación: {patent['publication_number']}</p>", unsafe_allow_html=True)
+        st.button("Volver a la Búsqueda", on_click=show_search_view, use_container_width=True)
+
     else:
         st.warning("No se ha seleccionado ninguna patente para ver los detalles.")
-        show_search_view() # Redirect to search if no patent is selected
+        show_search_view()
